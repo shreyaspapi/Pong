@@ -14,14 +14,28 @@ class GameScene: SKScene {
     var ball = SKSpriteNode()
     var enemy = SKSpriteNode()
     var main = SKSpriteNode()
+    var mainScore = SKLabelNode()
+    var enemyScore = SKLabelNode()
+    
+    var score = [Int]() {
+        didSet{
+            mainScore.text = "\(score[0])"
+            enemyScore.text = "\(score[1])"
+        }
+    }
     
     override func didMove(to view: SKView) {
+        
+        startGame()
         
         ball = self.childNode(withName: "ball") as! SKSpriteNode
         enemy = self.childNode(withName: "enemy") as! SKSpriteNode
         main = self.childNode(withName: "main") as! SKSpriteNode
         
-        ball.physicsBody?.applyImpulse(CGVector(dx: 40, dy: -40))
+        mainScore = self.childNode(withName: "mainScore") as! SKLabelNode
+        enemyScore = self.childNode(withName: "enemyScore") as! SKLabelNode
+        
+        ball.physicsBody?.applyImpulse(CGVector(dx: 50, dy: -50))
         
         let border = SKPhysicsBody(edgeLoopFrom: self.frame)
         
@@ -32,6 +46,25 @@ class GameScene: SKScene {
         self.physicsBody = border
         
     }
+    
+    func startGame(){
+        score = [0, 0]
+    }
+    
+    func addScore(_ playerWhoWon: SKSpriteNode){
+        
+        ball.position = CGPoint(x: 0, y: 0)
+        ball.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+        
+        if playerWhoWon == main {
+            score[0] += 1
+            ball.physicsBody?.applyImpulse(CGVector(dx: -50, dy: 50))
+        } else if playerWhoWon == enemy {
+            score [1] += 1
+            ball.physicsBody?.applyImpulse(CGVector(dx: 50, dy: -50))
+        }
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
@@ -47,7 +80,12 @@ class GameScene: SKScene {
         }
     }
     override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
         enemy.run(SKAction.moveTo(x: ball.position.x, duration: 1.0))
+        
+        if ball.position.y <= main.position.y - 50 {
+            addScore(enemy)
+        } else if ball.position.y >= enemy.position.y + 70 {
+            addScore(main)
+        }
     }
 }
